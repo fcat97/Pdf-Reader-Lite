@@ -33,12 +33,12 @@ class OpenDocumentFragment : Fragment() {
         try {
             if (!this::pdfReader.isInitialized) {
                 if (documentUri != null) {
-                    pdfReader = media.uqab.libPdfReader.PdfReader.Builder(requireActivity())
+                    pdfReader = PdfReader.Builder(requireActivity())
                         .attachToRecyclerView(recyclerView)
                         .readFrom(documentUri)
                         .build()
                 } else if (!documentPath.isNullOrBlank()) {
-                    pdfReader = media.uqab.libPdfReader.PdfReader.Builder(requireActivity())
+                    pdfReader = PdfReader.Builder(requireActivity())
                         .attachToRecyclerView(recyclerView)
                         .readFrom(documentPath)
                         .build()

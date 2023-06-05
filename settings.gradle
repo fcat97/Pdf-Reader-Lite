@@ -13,6 +13,6 @@ dependencyResolutionManagement {
         maven { url "https://www.jitpack.io" }
     }
 }
-rootProject.name = "Pdf Reader Lite"
+rootProject.name = "PdfReaderLite"
 include ':app'
 include ':libPdfReader'

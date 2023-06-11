@@ -45,6 +45,15 @@ class PdfViewActivity: AppCompatActivity() {
 
             openDocumentLauncher.launch(intent)
         }
+
+        openPdfListFragment()
+    }
+
+    private fun openPdfListFragment() {
+        val fragment = FragmentPdfList()
+        supportFragmentManager.beginTransaction()
+            .add(binding.fragmentContainerView.id, fragment)
+            .commit()
     }
 
     private fun openPdf(file: File) {

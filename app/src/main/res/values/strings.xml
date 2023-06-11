@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">Pdf Reader Lite</string>
+    <string name="app_name">Pdf Lite</string>
+    <string name="downloaded">Downloaded</string>
+    <string name="no_downloaded_pdf_found">No downloaded pdf found</string>
 </resources>

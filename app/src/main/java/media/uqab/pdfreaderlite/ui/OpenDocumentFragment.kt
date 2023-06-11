@@ -1,13 +1,20 @@
 package media.uqab.pdfreaderlite.ui
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import media.uqab.libPdfReader.PdfReader
 import media.uqab.pdfreaderlite.R
 import java.io.File
@@ -36,11 +43,17 @@ class OpenDocumentFragment : Fragment() {
                     pdfReader = PdfReader.Builder(requireActivity())
                         .attachToRecyclerView(recyclerView)
                         .readFrom(documentUri)
+                        .setOnPageScrollListener {
+                            getSharedPref().edit().putInt("last_read", it).apply()
+                        }
                         .build()
                 } else if (!documentPath.isNullOrBlank()) {
                     pdfReader = PdfReader.Builder(requireActivity())
                         .attachToRecyclerView(recyclerView)
                         .readFrom(documentPath)
+                        .setOnPageScrollListener {
+                            getSharedPref().edit().putInt("last_read", it).apply()
+                        }
                         .build()
                 }
             }
@@ -54,6 +67,22 @@ class OpenDocumentFragment : Fragment() {
                 pdfReader.jumpTo(it)
             } catch (ignore: UninitializedPropertyAccessException) { }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (this::pdfReader.isInitialized) {
+            // https://stackoverflow.com/questions/36426129/recyclerview-scroll-to-position-not-working-every-time
+            CoroutineScope(Dispatchers.Main).launch {
+                delay(200)
+                val lastRead = getSharedPref().getInt("last_read", 0)
+                pdfReader.jumpTo(lastRead)
+            }
+        }
+    }
+
+    private fun getSharedPref(): SharedPreferences {
+        return requireContext().getSharedPreferences("reading_pref", Context.MODE_PRIVATE)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

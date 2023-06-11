@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -29,6 +30,8 @@ class PdfReader private constructor(
     private var layoutManager: LinearLayoutManager
     private var rendererHelper: PdfRendererHelper? = null
     private val snapHelper: PagerSnapHelper = PagerSnapHelper()
+    private val analytics: Analytics = Analytics(activity)
+    private val fileName: String get() = filePath.substringAfterLast("/")
 
     init {
         val observer = LifecycleEventObserver { _, event ->
@@ -73,9 +76,14 @@ class PdfReader private constructor(
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                     super.onScrollStateChanged(recyclerView, newState)
                     layoutManager.let {
-                        val pos = it.findFirstCompletelyVisibleItemPosition()
+                        val pos = detectMostVisibleItemPos()
                         if (pos < 0) return
                         onScrollCallback.onScroll(pos + 1)
+
+                        // save current position and offset
+                        val v = recyclerView.getChildAt(0)
+                        val topOffset = if (v == null) 0 else v.top - recyclerView.paddingTop
+                        analytics.setLastRead(fileName, pos + 1, topOffset)
                     }
                 }
             })
@@ -85,18 +93,25 @@ class PdfReader private constructor(
     val currentPageNo get() = rendererHelper?.currentPageNumber ?: 0
     val totalPageCount get() = rendererHelper?.pageCount ?: 0
 
-    fun jumpTo(page: Int) = if (abs(currentPageNo - page) < 5) {
-        recyclerView.smoothScrollToPosition(page)
-    } else {
-        if (page < currentPageNo) { // moving backward
-            recyclerView.scrollToPosition((page + 10).coerceAtMost(currentPageNo))
-            recyclerView.smoothScrollToPosition(page)
-        } else if (page > currentPageNo) { // moving forward
-            recyclerView.scrollToPosition((page - 10).coerceAtLeast(currentPageNo))
-            recyclerView.smoothScrollToPosition(page)
+    fun jumpTo(page: Int) {
+        val pos = (page - 1).coerceAtLeast(0).coerceAtMost(totalPageCount - 1)
+
+        if (abs(currentPageNo - page) < 5) {
+            recyclerView.smoothScrollToPosition(pos)
         } else {
-            recyclerView.scrollToPosition(page)
+            if (page < currentPageNo) { // moving backward
+                recyclerView.scrollToPosition((pos + 5).coerceAtMost(currentPageNo))
+                recyclerView.smoothScrollToPosition(pos)
+            } else if (page > currentPageNo) { // moving forward
+                recyclerView.scrollToPosition((pos - 5).coerceAtLeast(currentPageNo))
+                recyclerView.smoothScrollToPosition(pos)
+            } else {
+                recyclerView.scrollToPosition(pos)
+            }
         }
+
+        val offset = analytics.getLastReadOffset(fileName)
+        layoutManager.scrollToPositionWithOffset(pos, offset)
     }
 
     fun changeReadingMode(readingMode: ReadingMode) {
@@ -137,6 +152,28 @@ class PdfReader private constructor(
                 recyclerView.background = ColorDrawable(Color.WHITE)
             }
         }
+    }
+
+    private fun detectMostVisibleItemPos(): Int {
+        val firstItemPosition = layoutManager.findFirstVisibleItemPosition()
+        val secondItemPosition = layoutManager.findLastVisibleItemPosition()
+
+        val mostVisibleItemPosition = if (firstItemPosition == secondItemPosition) {
+            firstItemPosition
+        } else {
+            val firstView = layoutManager.findViewByPosition(firstItemPosition)
+            val secondView = layoutManager.findViewByPosition(secondItemPosition)
+            try {
+                if (abs(firstView!!.top) <= abs(secondView!!.top)) {
+                    firstItemPosition
+                } else {
+                    secondItemPosition
+                }
+            } catch (e: Exception) {
+                firstItemPosition
+            }
+        }
+        return mostVisibleItemPosition
     }
 
     class Builder(private val activity: ComponentActivity) {

@@ -4,16 +4,15 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
-import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.DisplayMetrics
 import android.view.WindowManager
-import androidx.annotation.RequiresApi
 import java.io.File
 import java.io.FileDescriptor
 import java.io.IOException
@@ -78,7 +77,7 @@ internal class PdfRendererHelper private constructor(private val context: Contex
         currentPage.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
 
         return if (isDarkMode) {
-            changeBitmap(bitmap, INVERT, -1)
+            changeBitmap(bitmap, Color.BLACK, INVERT, -1)
         } else bitmap
     }
 
@@ -147,11 +146,12 @@ internal class PdfRendererHelper private constructor(private val context: Contex
         return scale
     }
 
-    private fun changeBitmap(src: Bitmap, color: FloatArray, saturation: Int): Bitmap {
+    private fun changeBitmap(src: Bitmap, bgColor: Int, colorFilter: FloatArray, saturation: Int): Bitmap {
         val height = src.height
         val width = src.width
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
+        canvas.drawColor(bgColor)
         val paint = Paint()
         val matrixGrayscale = ColorMatrix()
         if (saturation != -1) {
@@ -160,7 +160,7 @@ internal class PdfRendererHelper private constructor(private val context: Contex
         }
 
         // Darker Gray Mapping
-        val matrixInvert = ColorMatrix(color)
+        val matrixInvert = ColorMatrix(colorFilter)
         matrixInvert.preConcat(matrixGrayscale)
         val filter = ColorMatrixColorFilter(matrixInvert)
         paint.colorFilter = filter

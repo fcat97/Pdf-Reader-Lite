@@ -46,7 +46,7 @@ afterEvaluate {
         publications {
             maven(MavenPublication) {
                 group = 'media.uqab.libPdfReader'
-                version = '1.0.3'
+                version = '1.0.4'
                 artifactId = "libPdfReader"
                 from components.release
 

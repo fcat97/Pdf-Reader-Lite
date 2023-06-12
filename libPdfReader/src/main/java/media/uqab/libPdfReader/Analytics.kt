@@ -7,7 +7,7 @@ internal class Analytics(private val context: Context) {
     companion object {
         private const val ANALYTICS_PREF = "pdf_reader_analytics"
         private const val KEY_LAST_READ_FILE = "last_read"
-        private const val KEY_LAST_PAGE = "last_page"
+        private const val KEY_LAST_POSITION = "last_index"
         private const val KEY_PAGE_OFFSET = "offset"
     }
 
@@ -22,9 +22,9 @@ internal class Analytics(private val context: Context) {
         } else false
     }
 
-    fun getLastReadPage(fileName: String): Int {
+    fun getLastReadPosition(fileName: String): Int {
         return if (isLastRead(fileName)) {
-            getPref().getInt(KEY_LAST_PAGE, 0)
+            getPref().getInt(KEY_LAST_POSITION, 0)
         } else 0
     }
 
@@ -34,10 +34,10 @@ internal class Analytics(private val context: Context) {
         } else 0
     }
 
-    fun setLastRead(fileName: String, page: Int, offset: Int) {
+    fun setLastRead(fileName: String, pos: Int, offset: Int) {
         val sp = getPref().edit()
         sp.putString(KEY_LAST_READ_FILE, fileName)
-        sp.putInt(KEY_LAST_PAGE, page)
+        sp.putInt(KEY_LAST_POSITION, pos)
         sp.putInt(KEY_PAGE_OFFSET, offset)
         sp.apply()
     }

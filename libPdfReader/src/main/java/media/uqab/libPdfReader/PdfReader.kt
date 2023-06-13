@@ -64,7 +64,7 @@ class PdfReader private constructor(
                     super.onScrollStateChanged(recyclerView, newState)
                     layoutManager.let {
                         if (currentPageIndex < 0) return
-                        onScrollCallback.onScroll(currentPageIndex + 1)
+                        onScrollCallback.onScroll(currentPageIndex)
 
                         // save current position and offset
                         if (saveReadingHistory) {
@@ -117,9 +117,8 @@ class PdfReader private constructor(
     }
 
     @JvmOverloads
-    fun jumpTo(page: Int, animate: Boolean = false) {
-        val pos = (page - 1)
-            .coerceAtMost(totalPageCount - 1)
+    fun jumpTo(index: Int, animate: Boolean = false) {
+        val pos = index.coerceAtMost(totalPageCount - 1)
             .coerceAtLeast(0)
 
         if (!animate) {

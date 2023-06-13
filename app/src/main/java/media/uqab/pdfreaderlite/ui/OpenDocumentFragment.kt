@@ -86,7 +86,7 @@ class OpenDocumentFragment : Fragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putInt(CURRENT_PAGE_INDEX_KEY, pdfReader.currentPageNo)
+        outState.putInt(CURRENT_PAGE_INDEX_KEY, pdfReader.currentPageIndex)
         super.onSaveInstanceState(outState)
     }
 

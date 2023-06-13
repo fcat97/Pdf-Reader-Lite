@@ -40,7 +40,7 @@ class PdfReader private constructor(
     private val scale_2 = 2.0f
     private var scale = 1f
 
-    val currentPageIndex get() = detectMostVisibleItemPos()
+    val currentPageIndex get() = RecyclerViewHelper.getMostVisiblePosition(layoutManager)
     val totalPageCount get() = rendererHelper?.pageCount ?: 0
 
     init {
@@ -202,28 +202,6 @@ class PdfReader private constructor(
         anim.fillAfter = true // Needed to keep the result of the animation
         anim.duration = 500
         v.startAnimation(anim)
-    }
-
-    private fun detectMostVisibleItemPos(): Int {
-        val firstItemPosition = layoutManager.findFirstVisibleItemPosition()
-        val secondItemPosition = layoutManager.findLastVisibleItemPosition()
-
-        val mostVisibleItemPosition = if (firstItemPosition == secondItemPosition) {
-            firstItemPosition
-        } else {
-            val firstView = layoutManager.findViewByPosition(firstItemPosition)
-            val secondView = layoutManager.findViewByPosition(secondItemPosition)
-            try {
-                if (abs(firstView!!.top) <= abs(secondView!!.top)) {
-                    firstItemPosition
-                } else {
-                    secondItemPosition
-                }
-            } catch (e: Exception) {
-                firstItemPosition
-            }
-        }
-        return mostVisibleItemPosition
     }
 
     class Builder(private val activity: ComponentActivity) {

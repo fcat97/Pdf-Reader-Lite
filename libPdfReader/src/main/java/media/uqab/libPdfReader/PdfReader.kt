@@ -60,11 +60,28 @@ class PdfReader private constructor(
         // set onScroll listener
         onScrollCallback?.let {
             recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    super.onScrolled(recyclerView, dx, dy)
+                    layoutManager.let {
+                        if (currentPageIndex < 0) return
+                        onScrollCallback.onScroll(currentPageIndex)
+
+                        // save current position and offset
+                        /*if (saveReadingHistory) {
+                            val v = recyclerView.getChildAt(0)
+                            val topOffset = if (v == null) 0 else v.top - recyclerView.paddingTop
+                            Log.d("READER", "onScrollStateChanged: $currentPageIndex $topOffset")
+                            analytics.setLastRead(fileName, currentPageIndex, topOffset)
+                        }*/
+                    }
+                }
+
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                     super.onScrollStateChanged(recyclerView, newState)
                     layoutManager.let {
                         if (currentPageIndex < 0) return
-                        onScrollCallback.onScroll(currentPageIndex)
+                        onChangeCallback?.onChange(currentPageIndex)
 
                         // save current position and offset
                         if (saveReadingHistory) {

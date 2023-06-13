@@ -37,7 +37,7 @@ internal class PdfRendererHelper private constructor(private val context: Contex
     private lateinit var currentPage: PdfRenderer.Page
     private var isDarkMode: Boolean = false
 
-    var currentPageNumber: Int = INITIAL_PAGE_INDEX
+    var currentPageIndex: Int = INITIAL_PAGE_INDEX
 
     /**
      * Total pages in the PDF
@@ -64,7 +64,7 @@ internal class PdfRendererHelper private constructor(private val context: Contex
         if (index < 0 || index >= pageCount) throw IndexOutOfBoundsException()
 
         currentPage.close()
-        currentPageNumber = index
+        currentPageIndex = index
         currentPage = pdfRenderer.openPage(index)
 
         // Important: the destination bitmap must be ARGB (not RGB).
@@ -97,7 +97,7 @@ internal class PdfRendererHelper private constructor(private val context: Contex
 
         // This is the PdfRenderer we use to render the PDF.
         pdfRenderer = PdfRenderer(fileDescriptor)
-        currentPage = pdfRenderer.openPage(currentPageNumber)
+        currentPage = pdfRenderer.openPage(currentPageIndex)
     }
 
     @Throws(IOException::class, SecurityException::class)
@@ -105,7 +105,7 @@ internal class PdfRendererHelper private constructor(private val context: Contex
         val file = File(documentPath)
         val fileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
         pdfRenderer = PdfRenderer(fileDescriptor)
-        currentPage = pdfRenderer.openPage(currentPageNumber)
+        currentPage = pdfRenderer.openPage(currentPageIndex)
     }
 
     /**

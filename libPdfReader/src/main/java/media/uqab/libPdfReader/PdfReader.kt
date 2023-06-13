@@ -7,6 +7,9 @@ import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.util.Log
+import android.view.View
+import android.view.animation.Animation
+import android.view.animation.ScaleAnimation
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -14,8 +17,8 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
-import kotlin.Exception
 import kotlin.math.abs
+
 
 class PdfReader private constructor(
     private val activity: ComponentActivity,
@@ -33,8 +36,11 @@ class PdfReader private constructor(
     private val snapHelper: PagerSnapHelper = PagerSnapHelper()
     private val analytics: Analytics = Analytics(activity)
     private val fileName: String get() = filePath.substringAfterLast("/")
+    private val scale_1 = 1.5f
+    private val scale_2 = 2.0f
+    private var scale = 1f
 
-    val currentPageNo get() = rendererHelper?.currentPageNumber ?: 0
+    val currentPageIndex get() = detectMostVisibleItemPos()
     val totalPageCount get() = rendererHelper?.pageCount ?: 0
 
     init {
@@ -57,16 +63,15 @@ class PdfReader private constructor(
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
                     super.onScrollStateChanged(recyclerView, newState)
                     layoutManager.let {
-                        val pos = detectMostVisibleItemPos()
-                        if (pos < 0) return
-                        onScrollCallback.onScroll(pos + 1)
+                        if (currentPageIndex < 0) return
+                        onScrollCallback.onScroll(currentPageIndex + 1)
 
                         // save current position and offset
                         if (saveReadingHistory) {
                             val v = recyclerView.getChildAt(0)
                             val topOffset = if (v == null) 0 else v.top - recyclerView.paddingTop
-                            Log.d("READER", "onScrollStateChanged: $pos $topOffset")
-                            analytics.setLastRead(fileName, pos, topOffset)
+                            Log.d("READER", "onScrollStateChanged: $currentPageIndex $topOffset")
+                            analytics.setLastRead(fileName, currentPageIndex, topOffset)
                         }
                     }
                 }
@@ -120,14 +125,14 @@ class PdfReader private constructor(
         if (!animate) {
             recyclerView.scrollToPosition(pos)
         } else {
-            if (abs(currentPageNo - page) < 5) {
+            if (abs(currentPageIndex - pos) < 5) {
                 recyclerView.smoothScrollToPosition(pos)
             } else {
-                if (page < currentPageNo) { // moving backward
-                    recyclerView.scrollToPosition((pos + 5).coerceAtMost(currentPageNo))
+                if (pos < currentPageIndex) { // moving backward
+                    recyclerView.scrollToPosition((pos + 5).coerceAtMost(currentPageIndex))
                     recyclerView.smoothScrollToPosition(pos)
-                } else if (page > currentPageNo) { // moving forward
-                    recyclerView.scrollToPosition((pos - 5).coerceAtLeast(currentPageNo))
+                } else if (pos > currentPageIndex) { // moving forward
+                    recyclerView.scrollToPosition((pos - 5).coerceAtLeast(currentPageIndex))
                     recyclerView.smoothScrollToPosition(pos)
                 } else {
                     recyclerView.scrollToPosition(pos)
@@ -137,9 +142,10 @@ class PdfReader private constructor(
     }
 
     fun changeReadingMode(readingMode: ReadingMode) {
+
         this.readingMode = readingMode
 
-        val currentPage = currentPageNo
+        val currentPage = currentPageIndex
 
         this.layoutManager = if (readingMode == ReadingMode.SinglePageHorizontal) {
             LinearLayoutManager(activity, LinearLayoutManager.HORIZONTAL, false)
@@ -148,12 +154,23 @@ class PdfReader private constructor(
         }
 
         recyclerView.layoutManager = layoutManager
-        recyclerView.scrollToPosition(currentPage)
 
         snapHelper.attachToRecyclerView(null)
         if (readingMode != ReadingMode.Continuous) {
             snapHelper.attachToRecyclerView(recyclerView)
         }
+
+        recyclerView.scrollToPosition(currentPage)
+    }
+
+    private fun onDoubleClick() {
+        scale = when(scale) {
+            scale_1 -> scale_2
+            scale_2 -> 1f
+            else -> scale_1
+        }
+
+        scaleView(recyclerView, scale, scale)
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -174,6 +191,18 @@ class PdfReader private constructor(
                 recyclerView.background = ColorDrawable(Color.WHITE)
             }
         }
+    }
+
+    private fun scaleView(v: View, startScale: Float, endScale: Float) {
+        val anim: Animation = ScaleAnimation(
+            1f, 1f,  // Start and end values for the X axis scaling
+            startScale, endScale,  // Start and end values for the Y axis scaling
+            Animation.RELATIVE_TO_SELF, 0f,  // Pivot point of X scaling
+            Animation.RELATIVE_TO_SELF, 1f
+        ) // Pivot point of Y scaling
+        anim.fillAfter = true // Needed to keep the result of the animation
+        anim.duration = 500
+        v.startAnimation(anim)
     }
 
     private fun detectMostVisibleItemPos(): Int {

@@ -1,40 +1,35 @@
 package media.uqab.libPdfReader
 
-import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.LayoutManager
 import kotlin.math.abs
 
 object RecyclerViewHelper {
-    private const val TAG = "RecyclerViewHelper"
 
-    fun getMostVisiblePosition(layoutManager: LinearLayoutManager): Int {
-        var detectMostVisibleItemPos = getCompleteVisiblePosition(layoutManager)
-
-        Log.d(TAG, "detectMostVisibleItemPos1: $detectMostVisibleItemPos")
+    fun LinearLayoutManager.getMostVisiblePosition(): Int {
+        var detectMostVisibleItemPos = findFirstCompletelyVisibleItemPosition()
 
         if (detectMostVisibleItemPos == RecyclerView.NO_POSITION) {
-            detectMostVisibleItemPos = detectMostVisibleItemPos(layoutManager)
-            Log.d(TAG, "detectMostVisibleItemPos2: $detectMostVisibleItemPos")
+            detectMostVisibleItemPos = detectMostVisibleItemPos()
         }
 
         if (detectMostVisibleItemPos == RecyclerView.NO_POSITION) {
-            detectMostVisibleItemPos = getLastReadPosition(layoutManager)
-            Log.d(TAG, "detectMostVisibleItemPos3: $detectMostVisibleItemPos")
+            detectMostVisibleItemPos = findFirstVisibleItemPosition()
         }
 
         return detectMostVisibleItemPos
     }
 
-    private fun detectMostVisibleItemPos(layoutManager: LinearLayoutManager): Int {
-        val firstItemPosition = layoutManager.findFirstVisibleItemPosition()
-        val secondItemPosition = layoutManager.findLastVisibleItemPosition()
+    private fun LinearLayoutManager.detectMostVisibleItemPos(): Int {
+        val firstItemPosition = findFirstVisibleItemPosition()
+        val secondItemPosition = findLastVisibleItemPosition()
 
         val mostVisibleItemPosition = if (firstItemPosition == secondItemPosition) {
             firstItemPosition
         } else {
-            val firstView = layoutManager.findViewByPosition(firstItemPosition)
-            val secondView = layoutManager.findViewByPosition(secondItemPosition)
+            val firstView = findViewByPosition(firstItemPosition)
+            val secondView = findViewByPosition(secondItemPosition)
             try {
                 if (abs(firstView!!.top) <= abs(secondView!!.top)) {
                     firstItemPosition
@@ -46,13 +41,5 @@ object RecyclerViewHelper {
             }
         }
         return mostVisibleItemPosition
-    }
-
-    private fun getLastReadPosition(layoutManager: LinearLayoutManager): Int {
-        return layoutManager.findFirstVisibleItemPosition()
-    }
-
-    private fun getCompleteVisiblePosition(layoutManager: LinearLayoutManager): Int {
-        return layoutManager.findFirstCompletelyVisibleItemPosition()
     }
 }

@@ -123,6 +123,8 @@ internal class PdfRendererHelper private constructor(private val context: Contex
         this.isDarkMode = darkMode
     }
 
+    fun isDarkMode(): Boolean = isDarkMode
+
     private fun getScale(p: PdfRenderer.Page): Float {
         val displayMetrics = DisplayMetrics()
 

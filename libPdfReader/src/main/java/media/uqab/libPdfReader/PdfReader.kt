@@ -17,6 +17,11 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import media.uqab.libPdfReader.RecyclerViewHelper.getMostVisiblePosition
 import kotlin.math.abs
 
 
@@ -40,7 +45,7 @@ class PdfReader private constructor(
     private val scale_2 = 2.0f
     private var scale = 1f
 
-    val currentPageIndex get() = RecyclerViewHelper.getMostVisiblePosition(layoutManager)
+    val currentPageIndex get() = layoutManager.getMostVisiblePosition()
     val totalPageCount get() = rendererHelper?.pageCount ?: 0
 
     init {
@@ -96,7 +101,7 @@ class PdfReader private constructor(
         }
 
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_START) {
+            if (event == Lifecycle.Event.ON_CREATE) {
                 // try with uri first
                 if (rendererHelper == null) {
                     rendererHelper = try {
@@ -120,13 +125,21 @@ class PdfReader private constructor(
                             .coerceAtLeast(0)
                         val offset = analytics.getLastReadOffset(fileName)
                         layoutManager.scrollToPositionWithOffset(pos, offset)
+
+                        // https://stackoverflow.com/questions/36426129/recyclerview-scroll-to-position-not-working-every-time
+                        CoroutineScope(Dispatchers.Main).launch {
+                            try {
+                                delay(100)
+                                layoutManager.scrollToPositionWithOffset(pos, offset)
+                            } catch (ignored: Exception) {}
+                        }
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
                 }
             }
 
-            if (event == Lifecycle.Event.ON_STOP) {
+            if (event == Lifecycle.Event.ON_DESTROY) {
                 rendererHelper?.closeRenderer()
             }
         }
@@ -208,6 +221,8 @@ class PdfReader private constructor(
             }
         }
     }
+
+    fun isDarkMode() = rendererHelper?.isDarkMode() ?: false
 
     private fun scaleView(v: View, startScale: Float, endScale: Float) {
         val anim: Animation = ScaleAnimation(

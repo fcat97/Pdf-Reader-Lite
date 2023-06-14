@@ -7,12 +7,12 @@ import android.view.View
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import media.uqab.pdfreaderlite.databinding.ActivityPdfViewBinding
+import media.uqab.pdfreaderlite.databinding.ActivityMainBinding
 import java.io.File
 
 
-class PdfViewActivity: AppCompatActivity() {
-    private lateinit var binding: ActivityPdfViewBinding
+class MainActivity: AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
 
     private val openDocumentLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -31,7 +31,7 @@ class PdfViewActivity: AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityPdfViewBinding.inflate(layoutInflater)
+        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         if (savedInstanceState != null) {
@@ -46,7 +46,8 @@ class PdfViewActivity: AppCompatActivity() {
             openDocumentLauncher.launch(intent)
         }
 
-        openPdfListFragment()
+
+        // openPdfListFragment()
     }
 
     private fun openPdfListFragment() {
@@ -57,20 +58,10 @@ class PdfViewActivity: AppCompatActivity() {
     }
 
     private fun openPdf(file: File) {
-        val fragment = OpenDocumentFragment.newInstance(file)
-        supportFragmentManager.beginTransaction()
-            .add(binding.fragmentContainerView.id, fragment)
-            .commit()
-
-        binding.fileSelectorBtn.visibility = View.GONE
+        ActivityPdfReader.startThisActivity(this, file)
     }
 
     private fun openPdf(uri: Uri) {
-        val fragment = OpenDocumentFragment.newInstance(uri)
-        supportFragmentManager.beginTransaction()
-            .add(binding.fragmentContainerView.id, fragment)
-            .commit()
-
-        binding.fileSelectorBtn.visibility = View.GONE
+        ActivityPdfReader.startThisActivity(this, uri)
     }
 }

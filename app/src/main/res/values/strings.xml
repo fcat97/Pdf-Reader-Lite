@@ -2,4 +2,6 @@
     <string name="app_name">Pdf Lite</string>
     <string name="downloaded">Downloaded</string>
     <string name="no_downloaded_pdf_found">No downloaded pdf found</string>
+    <string name="jump_to_page">Jump to page</string>
+    <string name="dark_mode">Dark Mode</string>
 </resources>

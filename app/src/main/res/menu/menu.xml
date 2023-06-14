@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/dark_mode"
+        android:icon="@drawable/baseline_mode_night_24"
+        app:showAsAction="always"
+        android:title="@string/dark_mode"/>
+    <item android:id="@+id/go_to"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/baseline_location_searching_24"
+        android:title="@string/jump_to_page" />
+</menu>

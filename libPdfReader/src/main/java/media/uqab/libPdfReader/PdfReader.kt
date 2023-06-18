@@ -146,6 +146,15 @@ class PdfReader private constructor(
         activity.lifecycle.addObserver(observer)
     }
 
+    private fun reInitializeAdapter() {
+        readerAdapter = PdfReaderAdapter(
+            totalPages = { rendererHelper?.pageCount ?: 0 },
+            getPage = { p -> rendererHelper?.getBitmap(p) },
+            onItemClick = { p -> onClickCallback?.onClick(p) }
+        )
+        recyclerView.adapter = readerAdapter
+    }
+
     @JvmOverloads
     fun jumpTo(index: Int, animate: Boolean = false) {
         val pos = index.coerceAtMost(totalPageCount - 1)
@@ -190,6 +199,8 @@ class PdfReader private constructor(
         }
 
         recyclerView.scrollToPosition(currentPage)
+
+        reInitializeAdapter()
     }
 
     private fun onDoubleClick() {
